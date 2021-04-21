@@ -1,0 +1,273 @@
+// Generated from v9.proto
+
+namespace tn.direction.restapi_v9.fbs.Route_;
+
+enum Route_style : int {
+  FASTEST = 0,
+  SHORTEST = 1,
+  PEDESTRIAN = 2,
+  ECO = 3,
+  PERSONALIZED = 4,
+  EASY = 5,
+  TRACKING = 6,
+  USUAL = 7,
+}
+
+namespace tn.direction.restapi_v9.fbs.Leg_;
+
+enum Characteristics : int {
+  INVALID = 0,
+  HAS_HIGHWAY = 1,
+  HAS_TOLL = 2,
+  HAS_FERRY = 3,
+  HAS_CAR_TRAIN = 4,
+  HAS_HOV = 5,
+  HAS_TUNNEL = 6,
+  HAS_TIME_RESTRICTION = 7,
+  HAS_UNPAVED = 8,
+  HAS_NATIONAL_BORDER = 9,
+  HAS_AVOID_SEGMENT = 10,
+  HAS_WALKWAY = 11,
+  HAS_PASSENGER_FERRY = 12,
+  HAS_FOUR_WHEEL_DRIVE_ROAD = 13,
+  HAS_VEHICLE_RESTRICTION = 14,
+  HAS_SEASONAL_RESTRICTION = 15,
+  HAS_PERMIT_REQUIRED_ROAD = 16,
+}
+
+namespace tn.direction.restapi_v9.fbs.TimeRestriction_;
+
+enum Effective_period : int {
+  INSIDE = 0,
+  OUTSIDE = 1,
+}
+
+namespace tn.direction.restapi_v9.fbs;
+
+table Response {
+  status:int;
+  message:string;
+  metadata:tn.direction.restapi_v9.fbs.Metadata;
+  routes:[tn.direction.restapi_v9.fbs.Route];
+}
+
+table Route {
+  request:string;
+  uuid:string;
+  data_version:string;
+  length:float;
+  duration:float;
+  duration_no_traffic:float;
+  route_style:tn.direction.restapi_v9.fbs.Route_.Route_style;
+  guidance_stage:int;
+  geometry:string;
+  cost:float;
+  travel_points:[tn.direction.restapi_v9.fbs.TravelPoint];
+  time_restrictions:[tn.direction.restapi_v9.fbs.TimeRestriction];
+  legs:[tn.direction.restapi_v9.fbs.Leg];
+}
+
+table Leg {
+  length:float;
+  duration:float;
+  duration_no_traffic:float;
+  traffic_light_count:int;
+  has_guidance:bool;
+  major_roads:[string];
+  cost:float;
+  characteristics:[tn.direction.restapi_v9.fbs.Leg_.Characteristics];
+  toll_fee:[tn.direction.restapi_v9.fbs.TollFeeItem];
+  steps:[tn.direction.restapi_v9.fbs.Step];
+}
+
+table Step {
+  length:float;
+  has_guidance:bool;
+  country_code:string;
+  left_side_driving:bool;
+  road_names:[tn.direction.restapi_v9.fbs.Name];
+  road_attributes:int;
+  maneuver:tn.direction.restapi_v9.fbs.Maneuver;
+  edges:[tn.direction.restapi_v9.fbs.Edge];
+}
+
+table RoundaboutInfo {
+  exit_number:int;
+  exit_angles:[int];
+}
+
+table Maneuver {
+  pre_distance:float;
+  post_distance:float;
+  action:int;
+  assistant_action:int;
+  from_road_class:int;
+  to_road_class:int;
+  from_road_attributes:int;
+  to_road_attributes:int;
+  cross_street_names:[tn.direction.restapi_v9.fbs.Name];
+  signposts:[tn.direction.restapi_v9.fbs.Signpost];
+  junctionviews:[tn.direction.restapi_v9.fbs.Junctionview];
+  signboards:[tn.direction.restapi_v9.fbs.Signboard];
+  lane_info:[tn.direction.restapi_v9.fbs.LaneInfoItem];
+  roundabout_info:tn.direction.restapi_v9.fbs.RoundaboutInfo;
+  junction_style:int;
+  priority:int;
+  no_action_maneuvers:[tn.direction.restapi_v9.fbs.NoActionManeuver];
+}
+
+table Id {
+  lower:long;
+  upper:long;
+}
+
+table Timezone {
+  id:int;
+  dst_pattern:int;
+}
+
+table Edge {
+  id:tn.direction.restapi_v9.fbs.Id;
+  length:float;
+  turn_duration:float;
+  sum_energy_consumption:float;
+  geometry:string;
+  travel_speed:float;
+  static_speed:float;
+  avg_height:int;
+  timezone:tn.direction.restapi_v9.fbs.Timezone;
+  speed_pattern_id:int;
+  reference_speed:int;
+  time_restriction_indices:[int];
+  live_traffic_level:int;
+  is_4wd:bool;
+  duration:float;
+  duration_no_traffic:float;
+  cost:float;
+  turn_cost:float;
+  energy_consumption:float;
+  elevation_energy_consumption:float;
+  kinetic_energy_consumption:float;
+}
+
+table Status {
+  value:int;
+}
+
+table Message {
+  value:string;
+}
+
+table Metadata {
+  api_version:string;
+  data_model_version:string;
+  timestamp:string;
+  routing_time_ms:int;
+  guidance_time_ms:int;
+  way_id_conversion_time_ms:int;
+  software:string;
+  data:string;
+}
+
+table TollFeeItem {
+  currency:int;
+  fee:float;
+}
+
+table Name {
+  type:int;
+  orthography:tn.direction.restapi_v9.fbs.NameRecord;
+  phonemes:[tn.direction.restapi_v9.fbs.NameRecord];
+  shield_icon_id:string;
+}
+
+table NameRecord {
+  content:string;
+  tag:string;
+}
+
+table Signpost {
+  category:int;
+  name:tn.direction.restapi_v9.fbs.Name;
+}
+
+table Junctionview {
+  type:int;
+  pattern_id:string;
+  arrow_id:string;
+}
+
+table Signboard {
+  type:int;
+  pattern_id:string;
+  arrow_id:string;
+}
+
+table LaneInfoItem {
+  pattern:int;
+  preferred_pattern:int;
+  type:int;
+}
+
+table NoActionManeuver {
+  distance:float;
+  length:float;
+}
+
+table NavPoint {
+  point:string;
+  type:int;
+}
+
+table MatchedSegment {
+  lower:long;
+  upper:long;
+}
+
+table ParentLocation {
+  dummy:string;
+}
+
+table Location {
+  display_point:string;
+  matched_segment:tn.direction.restapi_v9.fbs.MatchedSegment;
+  nav_points:[tn.direction.restapi_v9.fbs.NavPoint];
+  location_name:string;
+  street_name:string;
+  door_number:string;
+  cross_street:string;
+  place_id:string;
+  parent_location:tn.direction.restapi_v9.fbs.ParentLocation;
+  parent_location_name:string;
+}
+
+table TravelPoint {
+  location:tn.direction.restapi_v9.fbs.Location;
+  match_point:string;
+  match_reason:int;
+  timezone:tn.direction.restapi_v9.fbs.Timezone;
+  country_code:string;
+}
+
+table TimeRestriction {
+  time_domain:string;
+  effective_period:tn.direction.restapi_v9.fbs.TimeRestriction_.Effective_period;
+}
+
+table OriginParam {
+  origin:string;
+}
+
+table DestinationParam {
+  destination:string;
+}
+
+table RouteParameters {
+  origin_param:tn.direction.restapi_v9.fbs.OriginParam;
+  destination_param:tn.direction.restapi_v9.fbs.DestinationParam;
+}
+
+root_type Response;
+
+file_identifier "resp";
+file_extension "route";

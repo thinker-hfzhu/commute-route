@@ -1,0 +1,19 @@
+{
+    "trace": {
+        "host": "ec2d-denalirouting-beta-anz-01.mypna.com",
+        "port": 8080,
+        "path": "/api/v0/route/"
+    },
+    "matching": {
+        "host": "osrm-api-ranking-unidb-na.stg.k8s.mypna.com", 
+        "path": "/matchingtrace/v1/driving"
+    },
+    "tracking": {
+        "host": "routing-cloud-for-track.dev.k8s.mypna.com",
+        "path": "/v9/route/flatbuffers"
+    },
+    "routing": {
+        "host": "routing-cloud-for-track.dev.k8s.mypna.com",
+        "path": "/v9/route/flatbuffers"
+    }
+}
