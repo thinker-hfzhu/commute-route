@@ -1,4 +1,5 @@
 import { flatbuffers } from "flatbuffers";
+import { relative } from "path";
 import { reflection } from "./reflection_generated";
 
 /**
@@ -44,7 +45,7 @@ export class FlatBufferCoder {
     /**
      * only for dt.RouteResponse
      */
-     beautify(object: any, format: string, tableDef = this.schema.rootTable) {
+     beautify(object: any, format: string, tableDef = this.schema.rootTable): any {
         for (let i = 0; i < tableDef.fieldDefs.length; i++) {
             let fieldDef = tableDef.fieldDefs[i];
             if (!object[fieldDef.name] || Object.keys(object).length === 0) {
@@ -72,6 +73,8 @@ export class FlatBufferCoder {
                 this.beautifyValue(object, format, fieldDef);
             }
         }
+
+        return object;
     } 
 
     private beautifyValue(object: any, format: string, fieldDef: FieldDef) {

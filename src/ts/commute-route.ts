@@ -9,33 +9,28 @@ export async function planCommuteRoute(request: dt.RouteRequest): Promise<any> {
     const origin = dt.parseCoordinate(request.origin);
     const destination = dt.parseCoordinate(request.destination);
     let errorMessage = '';
-    let step = 'fetch-trace';
 
     const usualPromise = ns.fetchDrivingTrace(request.user_id, origin, destination, request.start_time) 
     .then((drivingTraces) => {
-        step = 'match-trace';
         return ns.matchTraceToMap(drivingTraces);
     })
     .then((matchingPath) => {
-        step = 'usual-route';
         return ns.trackUsualRoute(matchingPath.ways, request);
     })
     .then((routeResponse) => {
-        var bytes = Buffer.from(routeResponse);
-        return FB_CODER.decode(bytes);
+        return asJsonFormat(routeResponse, request.format);
     })
     .catch(error => {
-        errorMessage = `Step ${step} error: ` + error.message;
+        errorMessage = error.message;
         return null;
     });
 
     const fastestPromise = ns.planFastestRoute(request)
     .then((routeResponse) => {
-        let bytes = Buffer.from(routeResponse);
-        return FB_CODER.decode(bytes);
+        return asJsonFormat(routeResponse, request.format);
     })
     .catch(error => {
-        errorMessage = 'Step fastest-route error: ' + error.message;
+        errorMessage = error.message;
         return null;
     });
    
@@ -47,6 +42,14 @@ export async function planCommuteRoute(request: dt.RouteRequest): Promise<any> {
                 usualRoute.routes[0].route_style = 'USUAL';
             }
 
+            if (usualRoute?.status && usualRoute.status != "11000") {
+                console.warn("Can't find usual route: " + usualRoute.message);
+            }
+
+            if (fastestRoute?.status && fastestRoute.status != "11000") {
+                console.warn("Can't find fastest route: " + fastestRoute.message);
+            }
+
             let commuteRoute: dt.RouteResponse = usualRoute;
             if (commuteRoute == null) {
                 commuteRoute = fastestRoute;
@@ -55,13 +58,12 @@ export async function planCommuteRoute(request: dt.RouteRequest): Promise<any> {
             };
 
             if (errorMessage) {
-                commuteRoute.message = errorMessage;
+                commuteRoute.message += " & " + errorMessage;
             }
 
             if (request.format == 'flatbuffers') {
                 resolve(FB_CODER.encode(commuteRoute));
             } else {
-                FB_CODER.beautify(commuteRoute, request.format);
                 resolve(commuteRoute);
             }
         })
@@ -70,6 +72,17 @@ export async function planCommuteRoute(request: dt.RouteRequest): Promise<any> {
         })
     });
     
+}
+
+function asJsonFormat(routeResponse: any, format: string): dt.RouteResponse {
+    let isBuffer = routeResponse.buffer != null && routeResponse.byteLength != null;
+    if (isBuffer) {
+        var bytes = Buffer.from(routeResponse);
+        var jsonResponse = FB_CODER.decode(bytes);
+        return FB_CODER.beautify(jsonResponse, format);
+    } else {
+        return routeResponse;
+    }
 }
 
 const FB_CODER = new fc.FlatBufferCoder(fs.readFileSync('./src/fb/direction-v9.bfbs'));
@@ -97,12 +110,12 @@ function isSameMajorRoad(fastestRoute: dt.NavRoute, usualRoute: dt.NavRoute): bo
         let fLeg = fastestRoute.legs[i];
         let uLeg = usualRoute.legs[i];
 
-        if (fLeg.major_roads.length != uLeg.major_roads.length) {
+        if (fLeg.major_roads_names.length != uLeg.major_roads_names.length) {
             return false;
         }
 
-        for (let j = 0; j < fLeg.major_roads.length; j++) {
-            if (fLeg.major_roads[j] != uLeg.major_roads[j]) {
+        for (let j = 0; j < fLeg.major_roads_names.length; j++) {
+            if (fLeg.major_roads_names[j] != uLeg.major_roads_names[j]) {
                 return false;
             }
         }

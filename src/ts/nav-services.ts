@@ -5,9 +5,9 @@ import * as dt from './data-type';
 export async function fetchDrivingTrace(userId: string, origin: dt.Coordinate, destination: dt.Coordinate, 
         time: string): Promise<dt.DrivingTrace> {
     let conf = config.trace;
-    let url = `http://${conf.host}:${conf.port}${conf.path}`;
+    let url = `http://${conf.host}:${conf.path}`;
     
-    axios.defaults.timeout = 1000;
+    axios.defaults.timeout = 3000;
 
     return new Promise((resolve, reject) => {
         axios.get(url, { 
@@ -24,11 +24,11 @@ export async function fetchDrivingTrace(userId: string, origin: dt.Coordinate, d
             if (response.data.route.path) {
                 resolve(response.data.route.path);
             }  else {
-                reject(new Error("No driving trace!"));
+                reject(createError("Can't fetch usual trace", null));
             }
         })
         .catch(error => {
-            reject(error);
+            reject(createError("Can't fetch usual trace", error));
         })
     });
 
@@ -47,11 +47,11 @@ export async function matchTraceToMap(drivingTrace: dt.DrivingTrace): Promise<dt
             if (response.data.matchings) {
                 resolve(response.data.matchings[0]);
             }  else {
-                reject(new Error("Cannot match trace!"));
+                reject(createError("Can't match usual trace", null));
             }
         })
         .catch(error => {
-            reject(error);
+            reject(createError("Can't match usual trace", error));
         })
     });
 
@@ -60,6 +60,7 @@ export async function matchTraceToMap(drivingTrace: dt.DrivingTrace): Promise<dt
 export async function trackUsualRoute(ways: number[], request: dt.RouteRequest): Promise<Buffer> {
     let conf = config.tracking;
     let url = `http://${conf.host}${conf.path}`;
+    let isBuffer = conf.path.endsWith('flatbuffers') ? true : false;
 
     const params = new URLSearchParams();
     for (let key in request) {
@@ -71,15 +72,15 @@ export async function trackUsualRoute(ways: number[], request: dt.RouteRequest):
     params.set('route_style', 'tracking');
 
     return new Promise((resolve, reject) => {
-        axios.post(url, params, {responseType: 'arraybuffer'}).then(response => {
+        axios.post(url, params, {responseType: isBuffer ? 'arraybuffer' : 'json'}).then(response => {
             if (response.data) {
                 resolve(response.data);
             }  else {
-                reject(new Error("Cannot track path!"));
+                reject(createError("Can't track usual route", null));
             }
         })
         .catch(error => {
-            reject(error);
+            reject(createError("Can't track usual route", error));
         })
     });
 
@@ -88,19 +89,37 @@ export async function trackUsualRoute(ways: number[], request: dt.RouteRequest):
 export async function planFastestRoute(request: dt.RouteRequest): Promise<Buffer> {
     let conf = config.routing;
     let url = `http://${conf.host}${conf.path}`;
+    let isBuffer = conf.path.endsWith('flatbuffers') ? true : false;
     request.route_style = "fastest";
 
     return new Promise((resolve, reject) => {
-        axios.get(url, {params: request, responseType: 'arraybuffer'}).then(response => {
+        axios.get(url, {params: request, responseType: isBuffer ? 'arraybuffer' : 'json'}).then(response => {
             if (response.data) {
                 resolve(response.data);
             }  else {
-                reject(new Error(response.data.message));
+                reject(createError("Can't plan fastest route", null));
             }
         })
         .catch(error => {
-            reject(error);
+            reject(createError("Can't plan fastest route", error));
         })
     });
 
 }
+
+function createError(message: string, error): Error {
+    if (error?.response?.data?.message) {
+        message += ": " + error.response.data.message;
+        console.info(message);
+    } else if (error?.message) {
+        message += ": " + error.message;
+        console.error(message);
+    } else {
+        message += ": no response data";
+        console.error(message);
+    }
+
+
+    return new Error(message);
+}
+

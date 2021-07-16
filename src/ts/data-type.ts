@@ -61,7 +61,7 @@ export interface RouteRequest {
 
 export interface RouteLeg {
 
-    major_roads?: string[];
+    major_roads_names?: string[];
 
 }
 

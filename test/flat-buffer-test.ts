@@ -21,7 +21,7 @@ async function testFlatbuffer() {
     var bfbs = fs.readFileSync('./src/fb/direction-v9.bfbs'); 
     var fbCoder = new fc.FlatBufferCoder(bfbs);
     
-    let binary = fs.readFileSync('./test/flatbuffers.dat');
+    let binary = fs.readFileSync('./test/flatbuffers1.data');
 
     var object = fbCoder.decode(binary);
     console.log(JSON.stringify(fbCoder.beautify(object, 'jsons'), null, 4));

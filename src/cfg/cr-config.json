@@ -1,7 +1,6 @@
 {
     "trace": {
-        "host": "ec2d-denalirouting-beta-anz-01.mypna.com",
-        "port": 8080,
+        "host": "tn-driver-profile.stg.k8s.mypna.com",
         "path": "/api/v0/route/"
     },
     "matching": {
@@ -9,11 +8,11 @@
         "path": "/matchingtrace/v1/driving"
     },
     "tracking": {
-        "host": "routing-cloud-for-track.dev.k8s.mypna.com",
+        "host": "sync4routing-na.stg.k8s.mypna.com",
         "path": "/v9/route/flatbuffers"
     },
     "routing": {
-        "host": "routing-cloud-for-track.dev.k8s.mypna.com",
+        "host": "sync4routing-na.stg.k8s.mypna.com",
         "path": "/v9/route/flatbuffers"
     }
 }
