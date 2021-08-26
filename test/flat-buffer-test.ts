@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as fc from '../src/fb/fb-coder'
+import * as fc from '../src/flatbuffers/fb-encoder'
 import { flatbuffers } from "flatbuffers";
 
 testFlatbuffer();
@@ -19,7 +19,7 @@ async function testFlatbuffer() {
 
     // test flat buffer
     var bfbs = fs.readFileSync('./src/fb/direction-v9.bfbs'); 
-    var fbCoder = new fc.FlatBufferCoder(bfbs);
+    var fbCoder = new fc.FlatBufferEncoder(bfbs);
     
     let binary = fs.readFileSync('./test/flatbuffers1.data');
 

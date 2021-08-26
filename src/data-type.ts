@@ -1,3 +1,6 @@
+export type Version = "v0" | "v1";
+
+export type Format = "flatbuffers" | "json" | "jsons";
 
 export interface Coordinate {
 
@@ -13,20 +16,10 @@ export function parseCoordinate(latlon: string): Coordinate {
 
 export interface DrivingTrace {
 
-    coordinates: string; // encoded polyline
+    coordinates: string;    // encoded polyline
 
-    // coordinatesAccuracy:
+    // coordinatesAccuracy
 
-    // altitudes;
-
-    // altitudesAccuracy;
-    
-    // headings;
-
-    // headingsAccuracy;
-
-    // timeStamps;
-  
 }
 
 export interface MatchingPath {
@@ -55,34 +48,24 @@ export interface RouteRequest {
 
     route_style?: string;
 
-    format?: string;
+    format?: Format;
+
+    version?: Version;
     
 }
 
-export interface RouteLeg {
-
-    major_roads_names?: string[];
-
-}
-
-export interface NavRoute {
-
-    duration: number; // in seconds
-
-    // distance: number; // in meters; length in v9? 
-
-    route_style: string;
-
-    legs?: RouteLeg[];
-
-}
-
-export interface RouteResponse {
+export interface NavResponse {
 
     status: string;
 
     message: string;
 
     routes: NavRoute[];
+
+}
+
+export interface NavRoute {
+
+    route_style: string;
 
 }

@@ -1,0 +1,6 @@
+{
+    "trace": "http://tn-driver-profile.stg.k8s.mypna.com/api/v0/route/",
+    "matching": "http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com/matchingtrace/v1/driving", 
+    "tracking": "http://sync4routing-na.stg.k8s.mypna.com/v8/route/json",
+    "routing": "http://sync4routing-na.stg.k8s.mypna.com/v8/route/json"
+}

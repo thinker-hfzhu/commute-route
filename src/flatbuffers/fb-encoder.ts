@@ -3,12 +3,15 @@ import { relative } from "path";
 import { reflection } from "./reflection_generated";
 
 /**
- * 
- * 1. flatc --binary --schema *.fbs
+ * 1. constructor with binary schema
+ *    flatc --binary --schema *.fbs
  *    -> *.bfbs
+ * 2. encode: object to flatbuffers data
+ * 3. decode: flatbuffers data to object
+ *    
  */
 
-export class FlatBufferCoder {
+export class FlatBufferEncoder {
     
     /**
      * 
@@ -94,7 +97,7 @@ export class FlatBufferCoder {
                 if (nestedTableDef.fieldDefs.length == 2 && 'lower' in value && 'upper' in value) {
                     if (value.upper.high == 0 && value.upper.low == 0 && value.lower.high == 0 && value.lower.low == 0) {
                         delete object[fieldDef.name];
-                    } else if (format == 'jsons') {
+                    } else if (format == 'json') {
                         object[fieldDef.name] = this.toString(value.lower) + '|' + this.toString(value.upper);
                     } else {
                         object[fieldDef.name] = [value.lower.low, value.lower.high, value.upper.low, value.upper.high];

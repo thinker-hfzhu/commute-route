@@ -1,11 +1,12 @@
 {
-    "compilerOptions": {
-      "module": "commonjs",
-      "target": "es2020",
-      "outDir": "dist",
-      "sourceMap": true,
-      "moduleResolution": "node",
-      "resolveJsonModule": true
-    },
-    "exclude": ["**/node_modules", "**/.*/"]
-  }
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "outDir": "./dist",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.json", "test/**/*"],
+  "exclude": ["**/node_modules", "**/.*/"]
+}
