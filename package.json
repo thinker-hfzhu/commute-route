@@ -1,4 +1,6 @@
 {
+  "name": "commute_route",
+  "version": "1.0.0",
   "dependencies": {
     "all": "^0.0.0",
     "axios": "^0.21.1",
