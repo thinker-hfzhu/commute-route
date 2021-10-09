@@ -2,7 +2,7 @@
 
 The AWS Serverless Application Model (SAM) is an open-source framework for building serverless applications. It provides shorthand syntax to express Lambda functions, APIs, and event source mappings. With just a few lines per resource, we can define the application we want and model it using YAML. During deployment, SAM transforms and expands the SAM syntax into AWS CloudFormation syntax, enabling us to build serverless applications faster.
 
-To get started with building SAM-based applications, use the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-reference.html#serverless-sam-cli). SAM CLI provides a Lambda-like execution environment that lets us locally build, test, and debug applications defined by SAM templates or through the AWS Cloud Development Kit (CDK). You can also use the SAM CLI to deploy our applications to AWS, or create secure continuous integration and deployment (CI/CD) pipelines that follow best practices and integrate with AWS' native and third party CI/CD systems.
+To get started with building SAM-based applications, use the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-reference.html#serverless-sam-cli). SAM CLI provides a Lambda-like execution environment that lets us locally build, test, and debug applications defined by SAM templates or through the AWS Cloud Development Kit (CDK). We can also use the SAM CLI to deploy our applications to AWS, or create secure continuous integration and deployment (CI/CD) pipelines that follow best practices and integrate with AWS' native and third party CI/CD systems.
 
 To use the SAM CLI, we need the following tools:
 
@@ -18,31 +18,38 @@ The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI
 
 AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), we can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
 
-The `template.yaml` file defines the application's AWS resources, including Lambda functions and an API Gateway API. You can update the template to add AWS resources through the same deployment process that updates our application code.
+The `template.yaml` file defines the application's AWS resources, including Lambda functions and API Gateway. We can update the template to add AWS resources through the same deployment process that updates our application code.
 
-Commute Route Service provides json and flatbuffers format route response. Flatbuffers format require to pass binary content through API Gateway. Until Sep 2021, SAM does not support set [content handing as CONVERT_TO_BINARY](https://github.com/aws/serverless-application-model/issues/553). Once SAM supports property ContentHandling, we can use simplified template definition file `sam/template-proxy.xml`, which is easy to understand and maintain. To handle binary payloads at the moment, we manually define Rest API resource using CloudFormation compatibile property `DefinitionBody` in `sam/template.xml`.  
+Commute Route Service provides json and flatbuffers format route response. Flatbuffers format require to pass binary content through API Gateway. Until Sep 2021, SAM does not support set [content handing as CONVERT_TO_BINARY](https://github.com/aws/serverless-application-model/issues/553). Once SAM supports property ContentHandling, we can use simplified template definition file `sam/template-proxy.xml`, which is easy to understand and maintain. To handle binary payloads at the moment, we define REST API resource using CloudFormation compatibile property `DefinitionBody` in `sam/template.xml`.  
 
 Template file includes content:
 
 * **Parameters** 
   - StageParam - selection to deploy to different running environments. Allowed values are 'dev', 'stg', 'prod', default is 'dev'.
+
 * **Mappings** - configured variables for different environments. 
   - Environment Variables - used in Lambda Function, including TraceUrl, MatchingUrl, TrackingUrl, RoutingUrl.
-  - AWS IAM and network - Lambda Role, Security Group Id, Subnet Ids, PipelineRole, Domain Name Certificate ARN. 
+  - AWS IAM and network - Lambda Role, VPC Endpoint Id, Security Group Id, Subnet Ids, Pipeline Role. 
+
 * **Resources**
   - Lambda Function : CommuteRouteService
-  - API Gateway : CommuteRouteGateWay
-  - Domain Name : commute-route.mypna.com
+  - API Gateway : CommuteRouteAPI
   - Rest API Resources : /v0/json, /v1/json, /v1/flatbuffers
 
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
 
-## SAM Build and test locally
+## SAM build and test locally
 
 Build our application with the `sam build` command. (require SAM CLI)
 
 ```bash
 sam$ sam build
+```
+
+SAM build could specify template file as template-proxy.yaml which not support CONVERT_TO_BINARY at the moment.
+
+```bash
+sam$ sam build --template-file template-proxy.yaml
 ```
 
 The SAM CLI installs dependencies defined in `package.json`, creates a deployment package, and saves it in the `sam/.aws-sam/build` folder.
@@ -55,7 +62,7 @@ Run functions locally and invoke them with the `sam local invoke` command. (requ
 sam$ sam local invoke CommuteRouteService --event ../tests/events/only-usual.json
 ```
 
-The SAM CLI can also emulate our application's API. Use the `sam local start-api` to run the API locally on port 3000.
+The SAM CLI can also emulate our application's API. Use the `sam local start-api` to run the API locally on port 3000. It only work with template-proxy.yaml.
 
 ```bash
 sam$ sam local start-api
@@ -74,7 +81,7 @@ The SAM CLI reads the application template to determine the API's routes and the
         ...
 ```
 
-## SAM Deploy 
+## SAM deploy 
 
 After SAM build, we can deploy our application to AWS. To deploy our application for the first time, run the following command to set up configuration: 
 
@@ -96,13 +103,13 @@ Commute-route project has defined configuration file `samconfig.toml`. We can ju
 sam$ sam deploy 
 ```
 
-If we need deploy to `stg` or `prod` environment, add option `--config-file` and specify the configuration file `samconfig-stg.toml` or `samconfig-prod.toml`.
+If we need deploy to `stg` or `prod` environment, add option `--config-file` and specify the configuration file as `samconfig-stg.toml` or `samconfig-prod.toml` where defines different environment(stage) name and SAM stack name.
 
 ```bash
 sam$ sam deploy --config-file samconfig-stg.toml
 ```
 
-## SAM Cleanup 
+## SAM cleanup 
 
 To delete the commute-route SAM created resources, including API gateway, Lambda function, CodeDeploy application, CloudFormation stack etc, run  command `aws cloudformation delete-stack` and specify stack-name which is defined in samconfig.toml
 
