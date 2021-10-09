@@ -18,7 +18,7 @@ The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI
 
 AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), we can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
 
-The `template.yaml` file defines the application's AWS resources, including Lambda functions and API Gateway. We can update the template to add AWS resources through the same deployment process that updates our application code.
+The `template.yaml` file defines the application's AWS resources, including Lambda functions and API Gateway. We can update the template to add AWS resources through the same deployment process that updates the application code.
 
 Commute Route Service provides json and flatbuffers format route response. Flatbuffers format require to pass binary content through API Gateway. Until Sep 2021, SAM does not support set [content handing as CONVERT_TO_BINARY](https://github.com/aws/serverless-application-model/issues/553). Once SAM supports property ContentHandling, we can use simplified template definition file `sam/template-proxy.xml`, which is easy to understand and maintain. To handle binary payloads at the moment, we define REST API resource using CloudFormation compatibile property `DefinitionBody` in `sam/template.xml`.  
 
@@ -40,11 +40,13 @@ See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-applica
 
 ## SAM build and test locally
 
-Build our application with the `sam build` command. (require SAM CLI)
+Build the application with the `sam build` command. (require SAM CLI)
 
 ```bash
 sam$ sam build
 ```
+
+The SAM CLI installs dependencies defined in `package.json`, creates a deployment package, and saves it into the `sam/.aws-sam/build` folder.
 
 SAM build could specify template file as template-proxy.yaml which not support CONVERT_TO_BINARY at the moment.
 
@@ -52,9 +54,7 @@ SAM build could specify template file as template-proxy.yaml which not support C
 sam$ sam build --template-file template-proxy.yaml
 ```
 
-The SAM CLI installs dependencies defined in `package.json`, creates a deployment package, and saves it in the `sam/.aws-sam/build` folder.
-
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `tests/events` folder in this project.
+After SAM build, we can test Lambda function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are pre-defined in the `tests/events` folder.
 
 Run functions locally and invoke them with the `sam local invoke` command. (require Docker)
 
@@ -62,7 +62,7 @@ Run functions locally and invoke them with the `sam local invoke` command. (requ
 sam$ sam local invoke CommuteRouteService --event ../tests/events/only-usual.json
 ```
 
-The SAM CLI can also emulate our application's API. Use the `sam local start-api` to run the API locally on port 3000. It only work with template-proxy.yaml.
+The SAM CLI can also emulate the application's API. Use the `sam local start-api` to run the API locally on port 3000. It only work with template-proxy.yaml which has APIs connected to Lambda functions
 
 ```bash
 sam$ sam local start-api
@@ -83,16 +83,16 @@ The SAM CLI reads the application template to determine the API's routes and the
 
 ## SAM deploy 
 
-After SAM build, we can deploy our application to AWS. To deploy our application for the first time, run the following command to set up configuration: 
+After SAM build, we can deploy the application to AWS. To deploy the application for the first time, run the following command to set up configuration: 
 
 ```bash
 sam$ sam deploy --guided
 ```
 
-The command will package and deploy our application to AWS, with a series of prompts:
+The command will package and deploy the application to AWS, with a series of prompts:
 
 * **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to our account and region.
-* **AWS Region**: The AWS region we want to deploy our app to.
+* **AWS Region**: The AWS region we want to deploy the app to.
 * **Confirm changes before deploy**: If set to yes, any change sets will be shown to us before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
 * **Allow SAM CLI IAM role creation**: To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for capabilities must be provided. 
 * **Save arguments to samconfig.toml**: If set to yes, our choices will be saved to the configuration file samconfig.toml.
