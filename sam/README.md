@@ -34,7 +34,7 @@ Template file includes content:
 * **Resources**
   - Lambda Function : CommuteRouteService
   - API Gateway : CommuteRouteAPI
-  - Rest API Resources : /v0/json, /v1/json, /v1/flatbuffers
+  - REST API Resources : /v0/json, /v1/json, /v1/flatbuffers
 
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
 
@@ -48,13 +48,13 @@ sam$ sam build
 
 The SAM CLI installs dependencies defined in `package.json`, creates a deployment package, and saves it into the `sam/.aws-sam/build` folder.
 
-SAM build could specify template file as template-proxy.yaml which not support CONVERT_TO_BINARY at the moment.
+`SAM build` could specify template file as template-proxy.yaml which not support CONVERT_TO_BINARY at the moment.
 
 ```bash
 sam$ sam build --template-file template-proxy.yaml
 ```
 
-After SAM build, we can test Lambda function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are pre-defined in the `tests/events` folder.
+After SAM build, we can test Lambda function by invoking it directly with a test event. An event is a JSON document which represents the input that the function receives from the event source. Test events are pre-defined in the `tests/events` folder.
 
 Run functions locally and invoke them with the `sam local invoke` command. (require Docker)
 
