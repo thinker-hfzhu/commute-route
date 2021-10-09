@@ -1,0 +1,225 @@
+@startuml
+
+    !include ./lexakai.theme
+
+    title "Commute Route Modules"
+
+    class CommuteRouteService {
+        - config: UrlConfig
+        ---
+        + planCommuteRoute(request) : Promise<Uint8Array|RouteResponse>
+        - fetchDrivingTrace(userId, origin, destination, time) : Promise<DrivingTrace>
+        - matchTraceToMap(drivingTrace) : Promise<MatchingPath>
+        - trackUsualRoute(ways, request) : Promise<Uint8Array|RouteResponse>
+        - planFastestRoute(request) : Promise<Uint8Array|RouteResponse>
+    }
+
+    class "url-config.ts" as config << (M,SeaGreen) >> {
+        --
+        + getConfig(version): UrlConfig
+        - initializeConfig()
+    }
+
+    CommuteRouteService .r.> config
+
+    class "index.ts" as index << (M,SeaGreen) >> {
+        --
+        + handler(event): HttpResponse
+        - initializeRequest(event): RouteRequest
+        - constructResponse(routeRequest, routeResponse): HttpResponse
+    }
+
+    index .d.> CommuteRouteService
+
+    class RouteConverger {
+        - usualResponse: RouteResponse;
+        - fastestResponse: RouteResponse;
+        - format: Format;
+        --
+        + constructor(usualResponse, fastestResponse, format)
+        --
+        + combine(): RouteResponse
+        # fbEncoder(): FlatBufferEncoder
+        # duration(route): number
+        # isSameMajorRoad(usualRoute, fastestRoute): boolean
+        - validateStatus(response): RouteResponse
+        - asObject(response): RouteResponse
+        - convergeResponse(): RouteResponse
+        - fastestValuable(fastestRoute, usualRoute): boolean
+    }
+
+    CommuteRouteService .d.> RouteConverger
+
+    entity RouteResponse {
+        - status : string
+        - message : string
+        - routes : Route[]
+    }
+
+    entity Route {
+        - route_style: string
+        - duration: number
+        - distance: number
+        - legs: RouteLeg[]
+    }
+
+    entity RouteLeg {
+        major_roads: string[]
+    }
+
+    RouteConverger .r.> RouteResponse
+    RouteResponse *-r-> Route
+    Route *-r-> RouteLeg
+
+    class FlatBufferEncoder {
+        - schema : Schema
+        ---
+        + constructor(Uint8Array)
+        ---
+        + encode(Object) : Unit8Array
+        + decode(Unit8Array) : Object
+        - buildSchema(bytes): Schema
+        - encodeTable(builder, tableDef, obj): Offset
+        - decodeTable(buffer, position, tableDef): Object
+    }
+
+    entity "direction-v9.bfbs" as v9 << (P,SeaGreen) >> {
+
+    }
+
+    class "reflection_generated.ts" as rg << (M,SeaGreen) >> {
+
+    }
+
+    v9 -r[hidden] FlatBufferEncoder
+    RouteConverger .d.> v9 : load
+    RouteConverger --> FlatBufferEncoder
+    FlatBufferEncoder .l.> v9 : parse
+    FlatBufferEncoder ..> rg : use
+
+    entity Schema {
+        + fileIndentifier : string
+        + fileExtension : string
+        + rootTable : TableDef
+        + tableDefs : TableDef[]
+        + enumDefs : EnumDef[]
+    }
+
+    FlatBufferEncoder -r-> Schema
+
+    entity TableDef {
+        + name : string
+        + isStruct : boolean
+        + minalign : number
+        + bytesize : number
+        + fieldDefs : FieldDef[]
+    }
+
+    Schema *-d-> TableDef
+
+    entity FieldDef {
+        + name : string
+        + typeDef : TypeDef
+        + id : number
+        + offset : number
+        + deprecated : boolean
+        + required : boolean
+        + key : boolean
+        + default : any
+    }
+
+    TableDef *-> FieldDef
+
+    entity TypeDef {
+        + baseType : reflection.BaseType
+        + element : reflection.BaseType
+        + index : number
+    }
+
+    FieldDef -> TypeDef
+
+    entity EnumDef {
+        + name : string
+        + isUnion : boolean
+        + underlyingType : TypeDef
+        + byValue : ValueDef[]
+        + byName : ValueDef[]
+    }
+
+    Schema *-> EnumDef
+
+    entity ValueDef {
+        + name : string
+        + value : number
+        + tableDef : TableDef
+    }
+
+    EnumDef *-> ValueDef
+
+@enduml
+
+@startuml
+
+    !include ./lexakai.theme
+
+    title "Interaction with other services"
+
+    skinparam handwritten true
+
+    autoactivate on
+
+    actor Driver
+    participant FrontEnd 
+    participant DestinationPredictionService 
+    participant CommuteRouteService 
+    participant DriverProfileServer 
+    participant MatchingServer 
+    participant RoutingServer 
+    
+    Driver -> FrontEnd : start navigation
+
+    FrontEnd -> DestinationPredictionService : predict(userId,\n    currentLocation,\n    currentTime)
+    return predictedDestination
+
+    FrontEnd -> CommuteRouteService : plan(routeRequest)
+    note right FrontEnd
+        routeRequest includes:
+            userId, currentLocation, predictedDestination, currentTime,
+            route options, output options, etc.
+    end note
+
+    CommuteRouteService -> CommuteRouteService : planUsualRoute()
+    
+    CommuteRouteService ->> DriverProfileServer : trace(userId,\n    currentLocation,\n    predictedDestination,\n    currentTime)
+    return coordinates
+
+    CommuteRouteService ->> MatchingServer : match(coordinates)
+    return ways 
+    
+    CommuteRouteService ->> RoutingServer : track(ways, routeRequest)
+    return usualRoute with guidance and traffic  
+
+    return 
+    
+    CommuteRouteService -> CommuteRouteService : planFastestRoute()
+    
+    CommuteRouteService ->> RoutingServer : route(routeRequest)
+    return fastestRoute with guidance and traffic  
+
+    return 
+
+    CommuteRouteService -> CommuteRouteService : combineRoutes()
+    note right CommuteRouteService
+        if no usualRoute 
+            return fastestRoute
+        else if fastestRoute is simalar path or not faster 
+            return usualRoute 
+        else 
+            return usualRoute and fastestRoute
+    end note
+
+    return
+    
+    return commuteRoutes with guidance and traffic
+
+@enduml

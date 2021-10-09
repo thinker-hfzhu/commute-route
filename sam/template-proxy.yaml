@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  commute-route-sam: AWS Lambda proxy integration
+  Commute Route SAM Template for commute-route service 
+
+Globals: 
+  Function:
+    Runtime: nodejs14.x
+    Timeout: 5
+
+Parameters: 
+  StageParam: 
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prod
+    Default: dev
+
+Mappings: 
+  StageMap: 
+    dev:
+      EnvTraceUrl: http://tn-driver-profile.stg.k8s.mypna.com
+      EnvMatchingUrl: http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com
+      EnvTrackingUrl: http://sync4routing-na.stg.k8s.mypna.com
+      EnvRoutingUrl: http://sync4routing-na.stg.k8s.mypna.com
+      GatewayName: CommuteRouteAPI-dev
+      ServiceName: CommuteRouteService-dev
+      LambdaRole: arn:aws:iam::269547223311:role/dpcs-dev-lambda-role  
+      VpcEndpointId: vpce-024d8b35e5234fe05
+      SecurityGroupId: sg-7ebb4e1b
+      SubnetId1: subnet-090ca134d0bdee732
+      SubnetId2: subnet-028e48bd280e91c09
+      PipelineRole: arn:aws:iam::269547223311:role/CodePipeline
+    stg:
+      EnvTraceUrl: http://tn-driver-profile.stg.k8s.mypna.com
+      EnvMatchingUrl: http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com
+      EnvTrackingUrl: http://sync4routing-na.stg.k8s.mypna.com
+      EnvRoutingUrl: http://sync4routing-na.stg.k8s.mypna.com
+      GatewayName: CommuteRouteAPI-stg
+      ServiceName: CommuteRouteService-stg
+      LambdaRole: arn:aws:iam::269547223311:role/dpcs-dev-lambda-role
+      VpcEndpointId: vpce-024d8b35e5234fe05
+      SecurityGroupId: sg-7ebb4e1b
+      SubnetId1: subnet-090ca134d0bdee732
+      SubnetId2: subnet-028e48bd280e91c09
+      PipelineRole: arn:aws:iam::269547223311:role/CodePipeline
+    prod:
+      EnvTraceUrl: http://tn-driver-profile.k8s.mypna.com
+      EnvMatchingUrl: http://osrm-api-ranking-unidb-na.k8s.mypna.com
+      EnvTrackingUrl: http://sync4routing-na.k8s.mypna.com
+      EnvRoutingUrl: http://sync4routing-na.k8s.mypna.com
+      GatewayName: CommuteRouteAPI
+      ServiceName: CommuteRouteService
+      LambdaRole: arn:aws:iam::269547223311:role/dpcs-dev-lambda-role
+      VpcEndpointId: vpce-024d8b35e5234fe05
+      SecurityGroupId: sg-7ebb4e1b
+      SubnetId1: subnet-090ca134d0bdee732
+      SubnetId2: subnet-028e48bd280e91c09
+      PipelineRole: arn:aws:iam::269547223311:role/CodePipeline
+
+Resources:
+  CommuteRouteService: 
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ../
+      Handler: dist/index.handler
+      FunctionName: !FindInMap [StageMap, !Ref StageParam, ServiceName] 
+      Environment:
+        Variables:
+          PROXY_INTEGRATION: true
+          TRACE_URL: !FindInMap [StageMap, !Ref StageParam, EnvTraceUrl] 
+          MATCHING_URL: !FindInMap [StageMap, !Ref StageParam, EnvMatchingUrl] 
+          TRACKING_URL: !FindInMap [StageMap, !Ref StageParam, EnvTrackingUrl] 
+          ROUTING_URL: !FindInMap [StageMap, !Ref StageParam, EnvRoutingUrl] 
+      Role: !FindInMap [StageMap, !Ref StageParam, LambdaRole] 
+      VpcConfig:
+        SecurityGroupIds: 
+          - !FindInMap [StageMap, !Ref StageParam, SecurityGroupId] 
+        SubnetIds: 
+          - !FindInMap [StageMap, !Ref StageParam, SubnetId1] 
+          - !FindInMap [StageMap, !Ref StageParam, SubnetId2] 
+      AutoPublishAlias: Current
+      DeploymentPreference:
+        Type: AllAtOnce # Canary10Percent5Minutes, Linear10PercentEvery1Minute, AllAtOnce
+        Role: !FindInMap [StageMap, !Ref StageParam, PipelineRole]
+      
+      Events: 
+        V0Json: 
+          Type: Api
+          Properties:
+            Path: /v0/json
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+        V1Json:
+          Type: Api
+          Properties:
+            Path: /v1/json
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+        V1Jsons:
+          Type: Api
+          Properties:
+            Path: /v1/jsons
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+        V1Flatbuffers: 
+          Type: Api
+          Properties:
+            Path: /v1/flatbuffers
+            Method: get
+            ## not support until Sep 2021: https://github.com/aws/serverless-application-model/issues/566
+            # ContentHandling: CONVERT_TO_BINARY
+            RestApiId:
+              Ref: CommuteRouteApi
+
+  CommuteRouteApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !FindInMap [StageMap, !Ref StageParam, GatewayName] 
+      EndpointConfiguration: 
+        Type: REGIONAL # PRIVATE
+        VPCEndpointIds: 
+          - !FindInMap [StageMap, !Ref StageParam, VpcEndpointId] 
+      StageName: !Ref StageParam
+      ## property Policy not defined for resource of type AWS::Serverless::Api
+      # Policy:
+      #   Version: '2012-10-17' 
+      #   Statement:
+      #     - Effect: Allow
+      #       Action:
+      #         - "execute-api:Invoke"
+      #       Resource: "execute-api:/*/*/*" 
+
+Outputs:
+  CommuteRouteService:
+    Description: "Lambda Function ARN in format 'arn:aws:lambda:{region}:{account-id}:function:{function-name}'"
+    Value: !GetAtt CommuteRouteService.Arn
+  CommuteRouteApi:
+    Description: "REST API URL in format 'https://{rest-api-id}.execute-api.{region}.amazonaws.com/{stage}' "
+    Value: !Sub "https://${CommuteRouteApi}.execute-api.${AWS::Region}.amazonaws.com/${StageParam}/"

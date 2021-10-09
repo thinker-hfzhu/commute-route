@@ -1,0 +1,71 @@
+{
+    "resource": "/v1/json",
+    "path": "/v1/json",
+    "httpMethod": "GET",
+    "headers": null,
+    "multiValueHeaders": null,
+    "queryStringParameters": {
+        "output": "default",
+        "start_time": "2021-11-06T11:27:00-08:00",
+        "user_id": "changzhengj",
+        "origin": "37.235714,-121.847417",
+        "destination": "37.246404,-121.925552",
+        "content_level": "Full"
+    },
+    "multiValueQueryStringParameters": {
+        "output": [
+            "default"
+        ],
+        "start_time": [
+            "2021-11-06T11:27:00-08:00"
+        ],
+        "user_id": [
+            "changzhengj"
+        ],
+        "origin": [
+            "37.235714,-121.847417"
+        ],
+        "destination": [
+            "37.246404,-121.925552"
+        ],
+        "content_level": [
+            "Full"
+        ]
+    },
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "resourceId": "yh5avy",
+        "resourcePath": "/v1/json",
+        "httpMethod": "GET",
+        "extendedRequestId": "F0gfpFVvPHcF0jQ=",
+        "requestTime": "17/Sep/2021:18:40:48 +0000",
+        "path": "/v1/json",
+        "accountId": "269547223311",
+        "protocol": "HTTP/1.1",
+        "stage": "test-invoke-stage",
+        "domainPrefix": "testPrefix",
+        "requestTimeEpoch": 1631904048785,
+        "requestId": "228a3139-d027-49b2-bba4-f2a50aa3c124",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "cognitoIdentityId": null,
+            "apiKey": "test-invoke-api-key",
+            "principalOrgId": null,
+            "cognitoAuthenticationType": null,
+            "userArn": "arn:aws:iam::269547223311:user/hfzhu@telenav.com",
+            "apiKeyId": "test-invoke-api-key-id",
+            "userAgent": "aws-internal/3 aws-sdk-java/1.12.68 Linux/5.4.134-73.228.amzn2int.x86_64 OpenJDK_64-Bit_Server_VM/25.302-b08 java/1.8.0_302 vendor/Oracle_Corporation cfg/retry-mode/standard",
+            "accountId": "269547223311",
+            "caller": "AIDAT5QSEHEH5YNIHN6DQ",
+            "sourceIp": "test-invoke-source-ip",
+            "accessKey": "ASIAT5QSEHEHS5LDCBVB",
+            "cognitoAuthenticationProvider": null,
+            "user": "AIDAT5QSEHEH5YNIHN6DQ"
+        },
+        "domainName": "testPrefix.testDomainName",
+        "apiId": "jvnira4ef9"
+    },
+    "body": null,
+    "isBase64Encoded": false
+}

@@ -1,65 +1,66 @@
-# Commute Route
 
-CI via [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html). `Build` and `Test` don't need to access any AWS resources.
+# Commute Route Service (AWS Lambda) 
 
-## Build
+Commute between home and work is most common scenario of navigation. With users' driving history, navigation system can predict their destionation to home or work and provide them personal usual driving route at the current time. Predicted destination and personal route during commute can improve user experience significantly with minimum development effort. [Design of Commute Route Service](doc/service-design.md) describes how the service interact with other navigation services and how service modules implement commute route features.  
 
-Once `sam build` run, it will generate all necessary files to this directory,
-`.aws-sam/build/CommuteRouteFunction`
+AWS Lambda is a serverless compute service that lets us run code without provisioning or managing servers, creating workload-aware cluster scaling logic, maintaining event integrations, or managing runtimes. With Lambda, we can run code for virtually any type of application or backend service - all with zero administration. Just upload our code as a ZIP file or container image, and Lambda automatically and precisely allocates compute execution power and runs our code based on the incoming request or event, for any scale of traffic. 
 
-```bash
-sam build
-```
+Commute Route Service implement Lambda functions in Node.js and use AWS SAM to build, test, and deploy the serivice. To run and edit Commute Route project, please make sure local environment has installed Node.js using command `node --version`. If not, please [install Node.js](https://nodejs.org/en/), including the NPM package management tool. After make Commute Route Service runnable locally, please see [SAM of Commute Route Servcie](sam/README.md) for build, deploy to AWS environment.
 
-## Test
+## Setting Up 
 
-Ensure Docker is running.
+### 1. Clone the project git repository into local workspace:
 
 ```bash
-$ sam local invoke --event events/event.json
-Invoking index.handler (nodejs14.x)
-Skip pulling image and use local one: public.ecr.aws/sam/emulation-nodejs14.x:rapid-1.29.0.
-
-Mounting /Users/xxx/src/bitbucket/navigation/commute-route/.aws-sam/build/CommuteRouteFunction as /var/task:ro,delegated inside runtime container
-START RequestId: 754eb5c5-df50-4aae-bcd9-fea6a6ebfcd2 Version: $LATEST
-2021-09-03T06:25:06.956Z        754eb5c5-df50-4aae-bcd9-fea6a6ebfcd2    INFO    event: {"origin":"7.235714,-121.847417","destination":"37.246404,-121.925552","output":"default","content_level":"Full","start_time":"2020-11-06T11:27:00-08:00","user_id":"changzhengj","format":"jsons","version":"v1"}
-2021-09-03T06:25:06.960Z        754eb5c5-df50-4aae-bcd9-fea6a6ebfcd2    INFO    test event: {"origin":"7.235714,-121.847417","destination":"37.246404,-121.925552","output":"default","content_level":"Full","start_time":"2020-11-06T11:27:00-08:00","user_id":"changzhengj","format":"jsons","version":"v1"}
-2021-09-03T06:25:08.492Z        754eb5c5-df50-4aae-bcd9-fea6a6ebfcd2    INFO    Cannot fetch usual trace: No routine routes between given points
-END RequestId: 754eb5c5-df50-4aae-bcd9-fea6a6ebfcd2
-REPORT RequestId: 754eb5c5-df50-4aae-bcd9-fea6a6ebfcd2  Init Duration: 0.27 ms  Duration: 3000.00 ms    Billed Duration: 3000 ms        Memory Size: 128 MB     Max Memory Used: 128 MB
-Function 'CommuteRouteFunction' timed out after 3 seconds
-No response from invoke container for CommuteRouteFunction
+workspace$> git clone https://bitbucket.telenav.com/scm/nav/commute-route.git
 ```
 
----
+### 2. Intall runtime dependencies and development dependencies:
 
-## Install Dependencies
+Enter into folder commute-route and install depencies by NPM package management tool.
 
 ```bash
-npm install
+commute-route$> npm install
 ```
 
-## Compile TypeScript Files
+The dependencies are defined in ./package.json. Installed dependencies will be saved into folder `./node_modules`.
+
+**Runtime dependencies:**
+
+* Axios - promise based HTTP client for node.js.
+* Flatbuffers - efficient cross platform serialization library.
+
+**Development dependencies:**
+
+* TypeScript - adds optional types to JavaScript that support tools for large-scale JavaScript applications. 
+* Jest - delightful JavaScript testing.
+
+### 3. Transcompile TypeScript files to JavaScript files
 
 ```bash
-tsc
+commute-route$> npm run build 
 ```
 
-## Package Project
+It runs build script defined in ./package.json. Transcompiled JavaScript files will be saved into folder `./dist`. 
+
+### 4. Run unit test and integration test
 
 ```bash
-zip -r commute-route.zip . -x *.git* *.DS_Store* *.zip* 'src/*' 'node_modules/typescript/*'
+commute-route$> npm run test 
 ```
 
-......
+It runs test script defined in ./package.json. Test coverage resport will be saved into folder `./coverage`.
 
-## Invoke Lambda
+Integration test need call Telenav internal Routing/Matching servers, please make sure run test inside corporation internal network.
 
-```bash
-aws lambda invoke --function-name commute-route --region us-west-2 --payload '{"origin": "7.235714,-121.847417", "destination": "37.246404,-121.925552", "output": "default", "content_level": "Full", "start_time": "2020-11-06T11:27:00-08:00", "user_id": "changzhengj", "format": "jsons", "version": "v1"}' response.json
-```
+## Debugging in IDE
 
-```bash
-$ cat response.json 
-The content will like '{"status":11008,"message":"Cannot fetch usual trace: No routine routes between given points ...... '.
-```
+[`Visual Studio Code`](https://code.visualstudio.com/download) is an integrated development environment made by Microsoft for a variety of programming languages, including Java, JavaScript, Go, Node.js, Python and C++. It is based on the Electron framework, which is used to develop Node.js Web applications that run on the Blink layout engine. 
+
+`Jest` is a JavaScript testing framework maintained by Facebook. It focus on simplicity and support for large web applications. Jest does not require a lot of configuration for first time users of a testing framework.
+
+![jest-runner](doc/image/jest-runner.png)
+
+`Jest Runner` extension on `Visual Studio Code` IDE provides simple way to run a test function or test-suite from context-menu.  
+
+![debug-test](doc/image/debug-test.png)

@@ -1,5 +1,5 @@
-import { flatbuffers } from "flatbuffers";
-import { relative } from "path";
+import * as flatbuffers from "flatbuffers";
+
 import { reflection } from "./reflection_generated";
 
 /**
