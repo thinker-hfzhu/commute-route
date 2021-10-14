@@ -59,8 +59,8 @@ Integration test need call Telenav internal Routing/Matching servers, please mak
 
 `Jest` is a JavaScript testing framework maintained by Facebook. It focus on simplicity and support for large web applications. Jest does not require a lot of configuration for first time users of a testing framework.
 
-![jest-runner](doc/image/jest-runner.png)
+![jest-runner](doc/image/jest-runner.jpg)
 
 `Jest Runner` extension on `Visual Studio Code` IDE provides simple way to run a test function or test-suite from context-menu.  
 
-![debug-test](doc/image/debug-test.png)
+![debug-test](doc/image/debug-test.jpg)
