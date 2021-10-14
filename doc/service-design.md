@@ -28,7 +28,7 @@ CommuteRoute API versions to Direction API versions:
   - Route request parameters, e.g. output option, need to be sent to routing server for route tracking. 
   - Current location might not be start point of usual route, need do short routing from current location to usual route (avoid detour in parking lot): a) path to start point of trimmed usual route; or b) path to nearest way on the route. 
 
-![usual-route](image/usual-route-at-parking-lot.png)
+![usual-route](image/usual-route-at-parking-lot.jpg)
 
 ### Fastest Route
 
