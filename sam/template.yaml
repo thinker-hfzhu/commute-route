@@ -211,6 +211,27 @@ Resources:
                     responseParameters:
                       method.response.header.Content-Type: "'application/octet-stream'"
                     contentHandling: CONVERT_TO_BINARY
+          /versions:
+            get:
+              responses: 
+                '200':
+                  headers:
+                    Content-Type:
+                      type: string
+              x-amazon-apigateway-integration:
+                type: aws
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CommuteRouteServiceAliasCurrent}/invocations
+                requestTemplates:
+                  application/json: "{\n\
+                    \  \"resource\": \"/versions\",\n\
+                    \  \"httpMethod\": \"$context.httpMethod\"\n\
+                    \ }"
+                responses: 
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Content-Type: "'application/json'"
   
   CommuteRouteServiceCatchAllPermissionCommuteRouteApi:
     Type: AWS::Lambda::Permission

@@ -119,6 +119,13 @@ Resources:
             # ContentHandling: CONVERT_TO_BINARY
             RestApiId:
               Ref: CommuteRouteApi
+        Versions:
+          Type: Api
+          Properties:
+            Path: /versions
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
 
   CommuteRouteApi:
     Type: AWS::Serverless::Api

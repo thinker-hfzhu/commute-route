@@ -66,6 +66,9 @@ The SAM CLI can also emulate the application's API. Use the `sam local start-api
 
 ```bash
 sam$ sam local start-api
+
+sam$ curl "http://localhost:3000/versions"
+
 sam$ curl "http://localhost:3000/v0/json?origin=37.235714,-121.847417&destination=37.246404,-121.925552&output=default&content_level=Full&start_time=20210315T194327Z&user_id=changzhengj"
 ```
 

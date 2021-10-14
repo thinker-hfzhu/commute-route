@@ -14,66 +14,74 @@ import * as cr from './service/commute-route-service';
  * 
  */
 export const handler = async (event: any): Promise<any> => {
-    const routeRequest = initializeRequest(event); 
-    
-    const rouetResponse = await cr.planCommuteRoute(routeRequest);
+    if (event.resource && event.resource === '/versions') {
+        return constructResponse(versions());
+    }
 
-    const httpResponse = constructResponse(routeRequest, rouetResponse);
-    
-    return httpResponse;
+    const routeRequest = initializeRequest(event); 
+    const rouetResponse = await cr.planCommuteRoute(routeRequest);
+    return constructResponse(rouetResponse);
 }
 
 function initializeRequest(event: any): dt.RouteRequest {
     let routeRequest: any;
-    
+       
     if ('queryStringParameters' in event) {
         if (event.queryStringParameters) {
             routeRequest = event.queryStringParameters;
         } else {
             routeRequest = { };
         }
+            
+        if (event.resource) {
+            // resouce example: "/v0/json"
+            let parts = event.resource.split('/'); 
+            routeRequest.version = parts[1];
+            routeRequest.format = parts[2];
+        } 
     } else {
         routeRequest = event; 
     }
-        
-    if (event.resource) {
-        // resouce example: "/v0/json"
-        let parts = event.resource.split('/'); 
-        routeRequest.version = parts[1];
-        routeRequest.format = parts[2];
-    } 
     
     return routeRequest;
 }
 
-function constructResponse(routeRequest: dt.RouteRequest, routeResponse: Uint8Array|dt.RouteResponse): any {
-    const proxyIntegration = process.env.PROXY_INTEGRATION === "true";
+function constructResponse(response: any): any {
+    const proxyIntegration = process.env.PROXY_INTEGRATION === 'true';
     
     let contentType = 'application/json';
     let body: any;
 
-    if (routeResponse instanceof Uint8Array) {
+    if (response instanceof Uint8Array) {
         contentType = 'application/octet-stream';
-        body = Buffer.from(routeResponse).toString('base64');
+        body = Buffer.from(response).toString('base64');
         // To handle binary payloads for AWS Lambda proxy integrations, you must base64-encode your function's response.
         // https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-payload-encodings.html
     } else { 
         if (proxyIntegration) {
-            body = JSON.stringify(routeResponse);
+            body = JSON.stringify(response);
         } else {
-            body = routeResponse;
+            body = response;
         }
     }
 
     if (proxyIntegration) {
         return {
-            'statusCode': 200,
-            'headers': {
+            statusCode: 200,
+            headers: {
                 'Content-Type': contentType
             },
-            'body': body
+            body: body
         } 
     } else {
         return body;
+    }
+}
+
+function versions() {
+    return {
+        service_name: 'commute-route',
+        version: '0.5.0',
+        description: 'SAM deployment'
     }
 }
