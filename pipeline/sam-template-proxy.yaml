@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  commute-route-sam: AWS Lambda proxy integration
+  Commute Route SAM Template for commute-route service 
+
+Globals: 
+  Function:
+    Runtime: nodejs14.x
+    Timeout: 5
+
+Parameters: 
+  EnvName: 
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prod
+    Default: dev
+  
+  TraceUrl: 
+    Type: String
+  MatchingUrl: 
+    Type: String
+  TrackingUrl: 
+    Type: String
+  RoutingUrl: 
+    Type: String
+  
+  VpcEndpointId: 
+    Type: String
+  SecurityGroupId: 
+    Type: String
+  SubnetId1: 
+    Type: String
+  SubnetId2: 
+    Type: String
+  
+  LambdaRole: 
+    Type: String
+  PipelineRole: 
+    Type: String
+
+Resources:
+  CommuteRouteService: 
+    Type: AWS::Serverless::Function
+    # Metadata:
+    #   BuildMethod: makefile
+    Properties:
+      CodeUri: ../
+      Handler: dist/index.handler
+      FunctionName: !Sub "CommuteRouteService-${EnvName}" 
+      Environment:
+        Variables:
+          PROXY_INTEGRATION: false
+          TRACE_URL: !Ref TraceUrl
+          MATCHING_URL: !Ref MatchingUrl 
+          TRACKING_URL: !Ref TrackingUrl 
+          ROUTING_URL: !Ref RoutingUrl
+      Role: !Ref LambdaRole
+      
+      VpcConfig:
+        SecurityGroupIds: 
+          - !Ref SecurityGroupId  
+        SubnetIds: 
+          - !Ref SubnetId1 
+          - !Ref SubnetId2 
+      
+      AutoPublishAlias: Current
+      DeploymentPreference:
+        Type: AllAtOnce # Canary10Percent5Minutes, Linear10PercentEvery1Minute, AllAtOnce
+        Role: !Ref PipelineRole 
+      
+      Events: 
+        V0Json: 
+          Type: Api
+          Properties:
+            Path: /v0/json
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+        V1Json:
+          Type: Api
+          Properties:
+            Path: /v1/json
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+        V1Jsons:
+          Type: Api
+          Properties:
+            Path: /v1/jsons
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+        V1Flatbuffers: 
+          Type: Api
+          Properties:
+            Path: /v1/flatbuffers
+            Method: get
+            ## not support until Sep 2021: https://github.com/aws/serverless-application-model/issues/566
+            # ContentHandling: CONVERT_TO_BINARY
+            RestApiId:
+              Ref: CommuteRouteApi
+        Versions:
+          Type: Api
+          Properties:
+            Path: /versions
+            Method: get
+            RestApiId:
+              Ref: CommuteRouteApi
+
+  CommuteRouteApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "CommuteRouteAPI-${EnvName}"  
+      EndpointConfiguration: 
+        Type: REGIONAL # PRIVATE
+        VPCEndpointIds: 
+          - !Ref VpcEndpointId 
+      StageName: !Ref EnvName
+      # # property Policy not defined for resource of type AWS::Serverless::Api
+      # Policy:
+      #   Version: '2012-10-17' 
+      #   Statement:
+      #     - Effect: Allow
+      #       Action:
+      #         - "execute-api:Invoke"
+      #       Resource: "execute-api:/*/*/*" 
+
+Outputs:
+  CommuteRouteService:
+    Description: "Lambda Function ARN in format 'arn:aws:lambda:{region}:{account-id}:function:{function-name}'"
+    Value: !GetAtt CommuteRouteService.Arn
+  CommuteRouteApi:
+    Description: "REST API URL in format 'https://{rest-api-id}.execute-api.{region}.amazonaws.com/{env}' "
+    Value: !Sub "https://${CommuteRouteApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvName}/"

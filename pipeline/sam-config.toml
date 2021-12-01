@@ -1,0 +1,80 @@
+version = 0.1
+
+[dev.global.parameters]
+region = "us-west-2"
+s3_bucket = "commute-route-bucket"
+s3_prefix = "feature"
+stack_name = "CommuteRouteSam-dev"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides=[
+    # Env
+    "EnvName=dev",
+
+    # URL
+    "TraceUrl=http://tn-driver-profile.stg.k8s.mypna.com",
+    "MatchingUrl=http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com",
+    "TrackingUrl=http://sync4routing-na.stg.k8s.mypna.com",
+    "RoutingUrl=http://sync4routing-na.stg.k8s.mypna.co",
+
+    # VPC
+    "VpcEndpointId=vpce-024d8b35e5234fe05",
+    "SecurityGroupId=sg-7ebb4e1b",
+    "SubnetId1=subnet-090ca134d0bdee732",
+    "SubnetId2=subnet-028e48bd280e91c09",
+    
+    # ROLE
+    "LambdaRole=arn:aws:iam::269547223311:role/dpcs-dev-lambda-role",
+    "PipelineRole=arn:aws:iam::269547223311:role/CodePipeline"
+]
+
+[stg.global.parameters]
+region = "us-west-2"
+s3_bucket = "commute-route-bucket-stg"
+s3_prefix = "master"
+stack_name = "CommuteRouteSam-stg"
+# capabilities = "CAPABILITY_IAM"
+parameter_overrides=[
+    # Env
+    "EnvName=stg",
+
+    # URL
+    "TraceUrl=http://tn-driver-profile.stg.k8s.mypna.com",
+    "MatchingUrl=http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com",
+    "TrackingUrl=http://sync4routing-na.stg.k8s.mypna.com",
+    "RoutingUrl=http://sync4routing-na.stg.k8s.mypna.co",
+
+    # VPC
+    "VpcEndpointId=vpce-024d8b35e5234fe05",
+    "SecurityGroupId=sg-7ebb4e1b",
+    "SubnetId1=subnet-090ca134d0bdee732",
+    "SubnetId2=subnet-028e48bd280e91c09",
+    
+    # ROLE
+    "LambdaRole=arn:aws:iam::288764080300:role/CommuteRouteLambdaRole"
+]
+
+[prod.global.parameters]
+region = "us-west-2"
+s3_bucket = "commute-route-bucket"
+s3_prefix = "master"
+stack_name = "CommuteRouteSam"
+# capabilities = "CAPABILITY_IAM"
+parameter_overrides=[
+    # Env
+    "EnvName=prod",
+
+    # URL
+    "TraceUrl=http://tn-driver-profile.stg.k8s.mypna.com",
+    "MatchingUrl=http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com",
+    "TrackingUrl=http://sync4routing-na.stg.k8s.mypna.com",
+    "RoutingUrl=http://sync4routing-na.stg.k8s.mypna.co",
+
+    # VPC
+    "VpcEndpointId=vpce-024d8b35e5234fe05",
+    "SecurityGroupId=sg-7ebb4e1b",
+    "SubnetId1=subnet-090ca134d0bdee732",
+    "SubnetId2=subnet-028e48bd280e91c09",
+    
+    # ROLE
+    "LambdaRole=arn:aws:iam::288764080300:role/CommuteRouteLambdaRole"
+]

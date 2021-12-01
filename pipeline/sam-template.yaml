@@ -10,55 +10,36 @@ Globals:
     Timeout: 5
 
 Parameters: 
-  StageParam: 
+  EnvName: 
     Type: String
     AllowedValues:
       - dev
       - stg
       - prod
     Default: dev
-
-Mappings: 
-  StageMap: 
-    dev:
-      EnvTraceUrl: http://tn-driver-profile.stg.k8s.mypna.com
-      EnvMatchingUrl: http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com
-      EnvTrackingUrl: http://sync4routing-na.stg.k8s.mypna.com
-      EnvRoutingUrl: http://sync4routing-na.stg.k8s.mypna.com
-      GatewayName: CommuteRouteAPI-dev
-      ServiceName: CommuteRouteService-dev
-      LambdaRole: arn:aws:iam::269547223311:role/dpcs-dev-lambda-role  
-      VpcEndpointId: vpce-024d8b35e5234fe05
-      SecurityGroupId: sg-7ebb4e1b
-      SubnetId1: subnet-090ca134d0bdee732
-      SubnetId2: subnet-028e48bd280e91c09
-      PipelineRole: arn:aws:iam::269547223311:role/CodePipeline
-    stg:
-      EnvTraceUrl: http://tn-driver-profile.stg.k8s.mypna.com
-      EnvMatchingUrl: http://osrm-api-ranking-unidb-na.stg.k8s.mypna.com
-      EnvTrackingUrl: http://sync4routing-na.stg.k8s.mypna.com
-      EnvRoutingUrl: http://sync4routing-na.stg.k8s.mypna.com
-      GatewayName: CommuteRouteAPI-stg
-      ServiceName: CommuteRouteService-stg
-      LambdaRole: arn:aws:iam::269547223311:role/dpcs-dev-lambda-role
-      VpcEndpointId: vpce-024d8b35e5234fe05
-      SecurityGroupId: sg-7ebb4e1b
-      SubnetId1: subnet-090ca134d0bdee732
-      SubnetId2: subnet-028e48bd280e91c09
-      PipelineRole: arn:aws:iam::269547223311:role/CodePipeline
-    prod:
-      EnvTraceUrl: http://tn-driver-profile.k8s.mypna.com
-      EnvMatchingUrl: http://osrm-api-ranking-unidb-na.k8s.mypna.com
-      EnvTrackingUrl: http://sync4routing-na.k8s.mypna.com
-      EnvRoutingUrl: http://sync4routing-na.k8s.mypna.com
-      GatewayName: CommuteRouteAPI
-      ServiceName: CommuteRouteService
-      LambdaRole: arn:aws:iam::269547223311:role/dpcs-dev-lambda-role
-      VpcEndpointId: vpce-024d8b35e5234fe05
-      SecurityGroupId: sg-7ebb4e1b
-      SubnetId1: subnet-090ca134d0bdee732
-      SubnetId2: subnet-028e48bd280e91c09
-      PipelineRole: arn:aws:iam::269547223311:role/CodePipeline
+  
+  TraceUrl: 
+    Type: String
+  MatchingUrl: 
+    Type: String
+  TrackingUrl: 
+    Type: String
+  RoutingUrl: 
+    Type: String
+  
+  VpcEndpointId: 
+    Type: String
+  SecurityGroupId: 
+    Type: String
+  SubnetId1: 
+    Type: String
+  SubnetId2: 
+    Type: String
+  
+  LambdaRole: 
+    Type: String
+  PipelineRole: 
+      Type: String
 
 Resources:
   CommuteRouteService: 
@@ -68,35 +49,37 @@ Resources:
     Properties:
       CodeUri: ../
       Handler: dist/index.handler
-      FunctionName: !FindInMap [StageMap, !Ref StageParam, ServiceName] 
+      FunctionName: !Sub "CommuteRouteService-${EnvName}" 
       Environment:
         Variables:
           PROXY_INTEGRATION: false
-          TRACE_URL: !FindInMap [StageMap, !Ref StageParam, EnvTraceUrl] 
-          MATCHING_URL: !FindInMap [StageMap, !Ref StageParam, EnvMatchingUrl] 
-          TRACKING_URL: !FindInMap [StageMap, !Ref StageParam, EnvTrackingUrl] 
-          ROUTING_URL: !FindInMap [StageMap, !Ref StageParam, EnvRoutingUrl] 
-      Role: !FindInMap [StageMap, !Ref StageParam, LambdaRole] 
+          TRACE_URL: !Ref TraceUrl
+          MATCHING_URL: !Ref MatchingUrl 
+          TRACKING_URL: !Ref TrackingUrl 
+          ROUTING_URL: !Ref RoutingUrl
+      Role: !Ref LambdaRole
+      
       VpcConfig:
         SecurityGroupIds: 
-          - !FindInMap [StageMap, !Ref StageParam, SecurityGroupId] 
+          - !Ref SecurityGroupId  
         SubnetIds: 
-          - !FindInMap [StageMap, !Ref StageParam, SubnetId1] 
-          - !FindInMap [StageMap, !Ref StageParam, SubnetId2] 
+          - !Ref SubnetId1 
+          - !Ref SubnetId2 
+      
       AutoPublishAlias: Current
       DeploymentPreference:
         Type: AllAtOnce # Canary10Percent5Minutes, Linear10PercentEvery1Minute, AllAtOnce
-        Role: !FindInMap [StageMap, !Ref StageParam, PipelineRole]
-
+        Role: !Ref PipelineRole 
+      
   CommuteRouteApi:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !FindInMap [StageMap, !Ref StageParam, GatewayName] 
+      Name: !Sub "CommuteRouteAPI-${EnvName}"  
       EndpointConfiguration: 
-        Type: PRIVATE 
+        Type: PRIVATE # PRIVATE, REGIONAL
         VPCEndpointIds: 
-          - !FindInMap [StageMap, !Ref StageParam, VpcEndpointId] 
-      StageName: !Ref StageParam
+          - !Ref VpcEndpointId 
+      StageName: !Ref EnvName
 
       DefinitionBody:
         openapi: 3.0.1 
@@ -246,7 +229,8 @@ Outputs:
     Description: "Lambda Function ARN in format 'arn:aws:lambda:{region}:{account-id}:function:{function-name}'"
     Value: !GetAtt CommuteRouteService.Arn
   CommuteRouteApi:
-    Description: "Private REST API URL in format 'https://{rest-api-id}-{vpce-id}.execute-api.{region}.amazonaws.com/{stage}' "
+    Description: "Private REST API URL in format 'https://{rest-api-id}-{vpce-id}.execute-api.{region}.amazonaws.com/{env}' "
     Value: !Sub 
-      - "https://${CommuteRouteApi}-${VpcEndpointId}.execute-api.${AWS::Region}.amazonaws.com/${StageParam}/"
-      - { VpcEndpointId: !FindInMap [StageMap, !Ref StageParam, VpcEndpointId]  }
+      - "https://${CommuteRouteApi}-${VpcEndpointId}.execute-api.${AWS::Region}.amazonaws.com/${EnvName}/"
+      - { VpcEndpointId: !Ref VpcEndpointId}
+      
